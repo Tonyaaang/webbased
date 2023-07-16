@@ -2,9 +2,12 @@ import 'dart:math';
 
 import 'package:banner_carousel/banner_carousel.dart';
 import 'package:banner_listtile/banner_listtile.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flat_banners/flat_banners.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; 
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class StartPage extends StatefulWidget {
   const StartPage({super.key});
@@ -14,22 +17,70 @@ class StartPage extends StatefulWidget {
 }
 
 class _StartPageState extends State<StartPage> {
-  Color maincolor = Color.fromARGB(255, 217, 14, 0);
-  final List<User> _users =
-      List<User>.generate(100, (index) => generateRandomUser());
 
-  static User generateRandomUser() {
-    final random = Random();
-    final businessName = 'Business ${random.nextInt(100)}';
-    final name = 'User ${random.nextInt(100)}';
-    final email = 'user${random.nextInt(100)}@example.com';
-    final totalproducts = random.nextInt(100);
+  List<List<dynamic>> _UserDetails = [];
+  int totalProducts = 0;
+  int usercount = 0;
+  int buscount = 0;
+  final FirebaseAuth auth = FirebaseAuth.instance;
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-    return User(businessName, name, email, totalproducts);
-  }
 
   @override
+  void initState(){
+    super.initState();
+    userscount();
+    _getUserList();
+  }
+
+  Color maincolor = Color.fromARGB(255, 217, 14, 0);
+  
+  Future<void> userscount() async{
+      var myRef = FirebaseFirestore.instance.collection('users');
+      var snapshot = await myRef.count().get();
+      usercount = snapshot.count;
+      // usercount = usercount + buscount;
+  }
+  
+  Future<void> _getUserList() async{
+      
+      final snapshot = await FirebaseFirestore.instance.collection('users').where('userlevel', isEqualTo: 'entrep').where('status', isEqualTo: 'approved').get();
+      final data = snapshot.docs.map((doc) {
+      final id = doc.id;
+      final email = doc['email'] as String; 
+      final businessname = doc['businessname'] as String;
+      final name = doc['name'] as String;
+      return [businessname,name,email,id];  
+      }).toList();
+
+      setState(() {
+        _UserDetails = data;
+      });
+
+  }
+
+      Future<void> countAllProducts() async {
+  final userCollection = FirebaseFirestore.instance.collection('users');
+  QuerySnapshot<Map<String, dynamic>> querySnapshot =
+      await userCollection.get();
+    
+  for (final userDoc in querySnapshot.docs) {
+    final productsCollection =
+        userCollection.doc(userDoc.id).collection('products');
+    QuerySnapshot<Map<String, dynamic>> productsQuerySnapshot =
+        await productsCollection.get();
+    totalProducts += productsQuerySnapshot.size;
+  }
+  setState(() {
+    totalProducts = totalProducts;
+  });
+}
+
+  
+  @override
   Widget build(BuildContext context) {
+
+
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(children: [
@@ -77,7 +128,7 @@ class _StartPageState extends State<StartPage> {
                               child: Column(
                                 children: [
                                   Text(
-                                    '32',
+                                    usercount.toString(),
                                     style: TextStyle(
                                         fontSize: 30,
                                         fontWeight: FontWeight.bold,
@@ -132,9 +183,9 @@ class _StartPageState extends State<StartPage> {
                               child: Column(
                                 children: [
                                   Text(
-                                    '155',
+                                    '$totalProducts',
                                     style: TextStyle(
-                                        fontSize: 30,
+                                        fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white),
                                   ),
@@ -352,7 +403,7 @@ class _StartPageState extends State<StartPage> {
                               child: Column(
                                 children: [
                                   Text(
-                                    '12',
+                                    buscount.toString(),
                                     style: TextStyle(
                                         fontSize: 30,
                                         fontWeight: FontWeight.bold,
@@ -986,7 +1037,7 @@ class _StartPageState extends State<StartPage> {
                     label: Text('TOTAL PRODUCTS',
                         style: TextStyle(fontWeight: FontWeight.bold))),
               ],
-              source: _UserDataSource(_users, context),
+              source: _UserDataSource(_UserDetails, context),
               rowsPerPage: 10, // Number of rows to display per page
             ),
           ),
@@ -1003,13 +1054,13 @@ enum UserType {
 }
 
 class User {
-  final String businessName;
+  final String businessname;
   final String name;
   final String email;
   final int totalproducts;
 
   User(
-    this.businessName,
+    this.businessname,
     this.name,
     this.email,
     this.totalproducts,
@@ -1017,22 +1068,21 @@ class User {
 }
 
 class _UserDataSource extends DataTableSource {
-  final List<User> _users;
+  final List<dynamic> _users;
   Color maincolor = Color.fromARGB(255, 217, 14, 0);
   final BuildContext context;
   _UserDataSource(this._users, this.context);
-
+ 
   @override
   DataRow getRow(int index) {
     final user = _users[index];
     return DataRow.byIndex(
       index: index,
       cells: [
-        DataCell(Text(user.businessName)),
-        DataCell(Text(user.name)),
-        DataCell(Text(user.email)),
-        DataCell(Text(
-          user.totalproducts.toString(),
+        DataCell(Text(user[0])),
+        DataCell(Text(user[1])),
+        DataCell(Text(user[2])),
+        DataCell(Text(user[3],
           textAlign: TextAlign.center,
         )),
       ],

@@ -5,10 +5,10 @@ import 'package:emailjs/emailjs.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math';
 
-class Users extends StatefulWidget {
+class Activation extends StatefulWidget {
   @override
   
-  _UsersPageState createState() => _UsersPageState();
+  _ActivationPageState createState() => _ActivationPageState();
 
 }
 
@@ -17,7 +17,7 @@ bool _isSuccess = false;
   final FirebaseAuth auth = FirebaseAuth.instance;
   final currentUser = FirebaseAuth.instance;
 
-class _UsersPageState extends State<Users> {
+class _ActivationPageState extends State<Activation> {
 
    @override
   void initState(){
@@ -30,15 +30,15 @@ class _UsersPageState extends State<Users> {
   List<List<dynamic>> _UserDetails = [];
   
  Future<void> _getUserList() async{
-      final snapshot = await FirebaseFirestore.instance.collection('users').where('userlevel', isEqualTo: 'customer').get();
+      final snapshot = await FirebaseFirestore.instance.collection('users').where('userlevel', isEqualTo: 'entrep').get();
       final data = snapshot.docs.map((doc) {
       final id = doc.id;
-      // final businessname = doc['businessname'] ?? '' as String; 
+      final businessname = doc['businessname'] ?? '' as String; 
       final name = doc['name'] ?? '' as String; 
       final email = doc['email'] ?? '' as String;
-      final coin = doc['coin'] ?? '' as String;
-      final dailytokendate = doc['dailytokendate'] ?? '' as String;
-      return [name,email,coin,dailytokendate,id];  
+      final plan = doc['plan'] ?? '' as String;
+      final status = doc['status'] ?? '' as String;
+      return [businessname,name,email,plan,status,id];  
       }).toList();
       setState(() {
         _UserDetails = data;
@@ -56,9 +56,11 @@ class _UsersPageState extends State<Users> {
             children: [
               Expanded(
                 child: PaginatedDataTable(
-                  header: Text('Users'),
+                  header: Text('Entrepreneurs'),
                   columns: [  
-                    
+                     DataColumn(
+                        label: Text('BUSNESS NAME',
+                            style: TextStyle(fontWeight: FontWeight.bold))),
                     DataColumn(
                         label: Text('NAME',
                             style: TextStyle(fontWeight: FontWeight.bold))),
@@ -66,7 +68,7 @@ class _UsersPageState extends State<Users> {
                         label: Text('EMAIL',
                             style: TextStyle(fontWeight: FontWeight.bold))),
                     DataColumn(
-                        label: Text('COIN',
+                        label: Text('PLAN',
                             style: TextStyle(fontWeight: FontWeight.bold))),
                     DataColumn(
                         label: Text('STATUS',
@@ -115,15 +117,16 @@ class _UserDataSource extends DataTableSource {
   DataRow getRow(int index) {
     final user = _users[index];
 
-    Timestamp timestamp = user[3];
-    DateTime dateTime = timestamp.toDate();
+    // Timestamp timestamp = user[3];
+    // DateTime dateTime = timestamp.toDate();
     return DataRow.byIndex(
       index: index,
       cells: [
         DataCell(Text(user[0])),
         DataCell(Text(user[1])),
-        DataCell(Text(user[2].toString())),
-        DataCell(Text(dateTime.toString())),
+        DataCell(Text(user[2])),
+        DataCell(Text(user[3])),
+        DataCell(Text(user[4])),
         DataCell(Row(
           children: [
             IconButton(
@@ -146,7 +149,7 @@ class _UserDataSource extends DataTableSource {
                             )),
                       ),
                       content: Text(
-                        'Send email notification?',
+                        'Are you sure you want to Appprove this user?',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       actions: [
@@ -173,8 +176,8 @@ class _UserDataSource extends DataTableSource {
                             ),
                             ElevatedButton(
                               onPressed: () {
-                                 sendnotif(context,user[0],user[1],user[4]);
-                                Navigator.of(context).pop();
+                                sendnotif(context,user[0],user[2],user[5]);
+                                 Navigator.of(context).pop();
                               },
                               style: ButtonStyle(
                                 backgroundColor:
@@ -188,7 +191,7 @@ class _UserDataSource extends DataTableSource {
                                   ),
                                 ),
                               ),
-                              child: Text('Send'),
+                              child: Text('Approve'),
                             ),
                           ],
                         )
@@ -251,8 +254,7 @@ class _UserDataSource extends DataTableSource {
                             ),
                             ElevatedButton(
                               onPressed: () {
-                                firestore.collection('users').doc(user[4].toString()).delete();
-                                
+                                sendnotif(context, user[0],user[2],user[5]);
                                 Navigator.of(context).pop();
                               },
                               style: ButtonStyle(
@@ -292,34 +294,41 @@ class _UserDataSource extends DataTableSource {
 
   @override
   int get selectedRowCount => 0;
+  
+ 
 }
 
 Future<void> sendnotif(context, String name,String email,String id) async {
    Map<String, dynamic> templateParams = {
-                      'to_email': email,
-                      'to_name' : name,
-                      'subject': 'Print Expiration',
-                    };
-                   try {
-                        await EmailJS.send(
-                          'service_nnhk9dt',
-                          'template_dt3546v',
-                          templateParams,
-                          const Options(
-                            publicKey: '2D0ZM8SRsxQD08xKh',
-                            privateKey: 'hu1U03KjaD2In0RQYQmfj',
-                          ),
-                        );
-                        final snackBar = SnackBar(
-                              content: const Text('Email sent!'),
-                              backgroundColor: (Colors.black12),
-                            );
-                           ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                      } catch (error) {
-                        print(error.toString());
-                      }
-}
-
+          'to_email': email,
+          'to_name' : name,
+          'subject': 'Account activated',
+        };
+        try {
+            await EmailJS.send(
+              'service_nnhk9dt',
+              'template_et2tu1f',
+              templateParams,
+              const Options(
+                publicKey: '2D0ZM8SRsxQD08xKh',
+                privateKey: 'hu1U03KjaD2In0RQYQmfj',
+              ),
+            );
+            final snackBar = SnackBar(
+                  content: const Text('User account is now active'),
+                  backgroundColor: (Colors.black12),
+                );
+                final CollectionReference updatestatus = FirebaseFirestore.instance.collection('users');
+                updatestatus.doc(id).set({'status': "approved"},SetOptions(merge: true));  
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          } catch (error) {
+            final snackBar = SnackBar(
+                  content: Text(error.toString()),
+                  backgroundColor: (Colors.black12),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          }
+  }
 
   setdeleteactive(context) {
   // set up the buttons

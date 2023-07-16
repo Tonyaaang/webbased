@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:webbased/pages/dashboard.dart';
+import 'login.dart';
 
-import 'pages/dashboard.dart';
-
-void main() {
+void main() async{
+  await Firebase.initializeApp(options: const FirebaseOptions(
+  apiKey: "AIzaSyAs5gx8RJ1lNa-74NXdpKiII8OhRNC50X4",
+  authDomain: "tapsiman-fff56.firebaseapp.com",
+  projectId: "tapsiman-fff56",
+  storageBucket: "tapsiman-fff56.appspot.com",
+  messagingSenderId: "1059323360544",
+  appId: "1:1059323360544:web:7108e2d6a8bb5594cb5345",
+  measurementId: "G-FKK0EGCJBN"));
   runApp(const MyApp());
 }
 
@@ -13,7 +22,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Tapsiman',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         // This is the theme of your application.

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:webbased/pages/startpage.dart';
 import 'package:webbased/pages/transaction.dart';
+import 'package:webbased/pages/Activation.dart';
 import 'package:webbased/pages/users.dart';
+
 
 class DashboardScreen extends StatefulWidget {
   @override
@@ -11,7 +13,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   Color maincolor = Color.fromARGB(255, 217, 14, 0);
   int _selectedIndex = 0;
-
+  
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -40,8 +42,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               NavigationRailDestination(
                 icon:
-                    Icon(Icons.people, color: Color.fromARGB(255, 217, 14, 0)),
-                label: Text('Users'),
+                    Icon(Icons.check_circle_outline_sharp, color: Color.fromARGB(255, 217, 14, 0)),
+                label: Text('Activation'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.shopping_cart,
@@ -49,9 +51,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 label: Text('Products'),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.check_circle_outline_sharp,
+                icon: Icon(Icons.people,
                     color: Color.fromARGB(255, 217, 14, 0)),
-                label: Text('Activation'),
+                label: Text('Users'),
               ),
               // NavigationRailDestination(
               //   icon: Icon(Icons.settings,
@@ -75,11 +77,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 0:
         return StartPage();
       case 1:
-        return UsersPage();
+        return Activation();
       case 2:
         return TransactionPage();
       case 3:
-        return TransactionPage();
+        return Users();
 
       default:
         return Container();
